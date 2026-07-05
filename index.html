@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <title>村落建造金額計算器</title>
+
+    <style>
+        :root {
+            --bg: #f4f7fb;
+            --card: #ffffff;
+            --primary: #2563eb;
+            --text: #1f2937;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+            --success-bg: #ecfdf5;
+            --success-text: #047857;
+            --danger-bg: #fef2f2;
+            --danger-text: #b91c1c;
+            --warning-bg: #fffbeb;
+            --warning-text: #92400e;
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            --radius: 18px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC",
+                "Microsoft JhengHei", Arial, sans-serif;
+            background: linear-gradient(180deg, #eef5ff 0%, var(--bg) 45%, #ffffff 100%);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 18px;
+        }
+
+        .app {
+            width: 100%;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+
+        .language-bar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .language-bar label {
+            margin: 0;
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 800;
+        }
+
+        .language-select {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 9px 12px;
+            font-size: 14px;
+            font-weight: 800;
+            color: #111827;
+            background: #fff;
+            outline: none;
+        }
+
+        .language-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 8px 14px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            line-height: 1.25;
+            color: #111827;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            margin: 10px 0 0;
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .header .notice {
+            margin: 6px auto 0;
+            max-width: 620px;
+            color: #8a94a6;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(229, 231, 235, 0.85);
+            padding: 18px;
+            margin-top: 16px;
+        }
+
+        label {
+            display: block;
+            font-weight: 800;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        input {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 17px 16px;
+            font-size: 24px;
+            font-weight: 900;
+            text-align: center;
+            letter-spacing: 1px;
+            outline: none;
+            transition: 0.2s;
+            background: #fff;
+            color: #111827;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+        }
+
+        input:disabled {
+            background: #f3f4f6;
+            color: #9ca3af;
+        }
+
+        .hint {
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        .message {
+            display: none;
+            margin-top: 14px;
+            border-radius: 14px;
+            padding: 13px 14px;
+            font-weight: 700;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        .message.error {
+            display: block;
+            background: var(--danger-bg);
+            color: var(--danger-text);
+        }
+
+        .message.ok {
+            display: block;
+            background: var(--success-bg);
+            color: var(--success-text);
+        }
+
+        .message.warning {
+            display: block;
+            background: var(--warning-bg);
+            color: var(--warning-text);
+        }
+
+        .result {
+            display: none;
+            margin-top: 16px;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .village-info {
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            color: white;
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 14px;
+        }
+
+        .village-info .no {
+            opacity: 0.86;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .village-info .name {
+            font-size: 25px;
+            font-weight: 900;
+            line-height: 1.25;
+            margin-bottom: 10px;
+        }
+
+        .village-info .cost-label {
+            opacity: 0.86;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .village-info .cost {
+            font-size: 30px;
+            font-weight: 950;
+            line-height: 1.15;
+            word-break: break-word;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .discount-card {
+            border: 1px solid var(--border);
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 14px;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .discount-card .discount {
+            font-size: 17px;
+            font-weight: 900;
+            color: var(--primary);
+            white-space: nowrap;
+        }
+
+        .discount-card .amount {
+            text-align: right;
+            font-size: 18px;
+            font-weight: 900;
+            color: #111827;
+            word-break: break-word;
+        }
+
+        .amount-small {
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 700;
+        }
+
+        .save-small {
+            display: inline-block;
+            margin-top: 4px;
+            font-size: 12px;
+            color: #047857;
+            font-weight: 800;
+        }
+
+        .raw {
+            margin-top: 12px;
+            color: var(--muted);
+            font-size: 13px;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .footer {
+            text-align: center;
+            color: var(--muted);
+            font-size: 12px;
+            padding: 18px 6px 6px;
+            line-height: 1.6;
+        }
+
+        @media (min-width: 560px) {
+            .grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .discount-card:last-child {
+                grid-column: span 2;
+            }
+        }
+
+        @media (max-width: 430px) {
+            body {
+                padding: 12px;
+            }
+
+            .language-bar {
+                justify-content: center;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .card {
+                padding: 15px;
+            }
+
+            .village-info .cost {
+                font-size: 26px;
+            }
+
+            .discount-card {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .discount-card .amount {
+                text-align: left;
+                font-size: 20px;
+            }
+
+            input {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="app">
+        <div class="language-bar">
+            <label for="languageSelect" data-i18n="languageLabel">語言</label>
+            <select id="languageSelect" class="language-select">
+                <option value="zh-Hant">繁體中文</option>
+                <option value="en">English</option>
+                <option value="vi">Tiếng Việt</option>
+            </select>
+        </div>
+
+        <section class="header">
+            <h1 data-i18n="title">村落建造金額計算器</h1>
+            <p data-i18n="subtitle">輸入村落編號，即時查看蓋完需要多少金幣，以及 10%～40% off 後的實際支付金額。</p>
+            <p class="notice" data-i18n="notice">數據參考公開網頁與社群整理資料，僅供參考，實際遊戲內容請以官方或遊戲內顯示為準。</p>
+        </section>
+
+        <section class="card">
+            <label for="villageInput" data-i18n="inputLabel">輸入村落編號</label>
+
+            <input id="villageInput" type="tel" inputmode="numeric" pattern="[0-9]*" placeholder="資料載入中..."
+                autocomplete="off" disabled />
+
+            <div id="message" class="message warning">正在讀取 villages_cost.json...</div>
+
+            <div id="result" class="result">
+                <div class="village-info">
+                    <div id="villageNo" class="no"></div>
+                    <div id="villageName" class="name"></div>
+                    <div class="cost-label" data-i18n="originalCostLabel">蓋完整座村落原價需要</div>
+                    <div id="villageCost" class="cost"></div>
+                </div>
+
+                <div class="grid" id="discountGrid"></div>
+
+                <div id="rawCost" class="raw"></div>
+            </div>
+        </section>
+
+        <div class="footer">
+            © <span id="year"></span> Coin999-長長久久隊伍. All rights reserved.
+        </div>
+    </main>
+
+    <script>
+        let villages = [];
+        let maxVillageNumber = 1;
+        let currentLang = localStorage.getItem("coin999_lang") || "zh-Hant";
+        let currentMessageKey = "loading";
+        let currentMessageType = "warning";
+        let lastRenderedVillage = null;
+
+        const DATA_FILE = "villages_cost.json";
+
+        const villageInput = document.getElementById("villageInput");
+        const message = document.getElementById("message");
+        const result = document.getElementById("result");
+        const villageNo = document.getElementById("villageNo");
+        const villageName = document.getElementById("villageName");
+        const villageCost = document.getElementById("villageCost");
+        const rawCost = document.getElementById("rawCost");
+        const discountGrid = document.getElementById("discountGrid");
+        const languageSelect = document.getElementById("languageSelect");
+
+        const discounts = [10, 20, 25, 30, 40];
+
+        const i18n = {
+            "zh-Hant": {
+                htmlLang: "zh-Hant",
+                pageTitle: "村落建造金額計算器",
+                languageLabel: "語言",
+                title: "村落建造金額計算器",
+                subtitle: "輸入村落編號，即時查看蓋完需要多少金幣，以及 10%～40% off 後的實際支付金額。",
+                notice: "數據參考公開網頁與社群整理資料，僅供參考，實際遊戲內容請以官方或遊戲內顯示為準。",
+                inputLabel: "輸入村落編號",
+                inputPlaceholderLoading: "資料載入中...",
+                inputPlaceholderReady: "輸入村落編號",
+                inputPlaceholderFailed: "資料載入失敗",
+                originalCostLabel: "蓋完整座村落原價需要",
+                loading: "正在讀取 villages_cost.json...",
+                loaded: count => "資料載入完成，共 " + count + " 筆村落資料。",
+                loadFailed: error => "讀取 villages_cost.json 失敗。請確認檔案名稱、位置與 JSON 格式是否正確。錯誤訊息：" + error,
+                jsonArrayError: "JSON 格式錯誤：最外層必須是陣列",
+                jsonEmptyError: "JSON 內沒有可用的村落資料",
+                enterVillageNumber: "請輸入村落編號。",
+                noVillageData: "目前無此村落資料",
+                noVillageConsole: number => "目前無此村落資料：" + number,
+                villageNo: number => "村落 #" + number,
+                rawCost: amount => "原始總金幣：" + amount + " 金幣",
+                pay: amount => "需支付：" + amount + " 金幣",
+                save: amount => "省下：" + amount,
+                coins: "金幣",
+                tenThousand: "萬金幣",
+                hundredMillion: "億金幣",
+                trillion: "兆金幣",
+                locale: "zh-TW"
+            },
+            "en": {
+                htmlLang: "en",
+                pageTitle: "Village Build Cost Calculator",
+                languageLabel: "Language",
+                title: "Village Build Cost Calculator",
+                subtitle: "Enter a village number to instantly view the full build cost and the actual amount after 10%–40% off.",
+                notice: "Data is based on publicly available web pages and community references. For reference only; actual in-game values may vary.",
+                inputLabel: "Enter village number",
+                inputPlaceholderLoading: "Loading data...",
+                inputPlaceholderReady: "Enter village number",
+                inputPlaceholderFailed: "Failed to load data",
+                originalCostLabel: "Original full village cost",
+                loading: "Loading villages_cost.json...",
+                loaded: count => "Data loaded. " + count + " village records found.",
+                loadFailed: error => "Failed to load villages_cost.json. Please check the file name, location, and JSON format. Error: " + error,
+                jsonArrayError: "Invalid JSON format: the top level must be an array.",
+                jsonEmptyError: "No usable village data found in the JSON file.",
+                enterVillageNumber: "Please enter a village number.",
+                noVillageData: "No village data available",
+                noVillageConsole: number => "No village data available: " + number,
+                villageNo: number => "Village #" + number,
+                rawCost: amount => "Original total coins: " + amount + " coins",
+                pay: amount => "Pay: " + amount + " coins",
+                save: amount => "Save: " + amount,
+                coins: "coins",
+                locale: "en-US"
+            },
+            "vi": {
+                htmlLang: "vi",
+                pageTitle: "Công cụ tính chi phí xây làng",
+                languageLabel: "Ngôn ngữ",
+                title: "Công cụ tính chi phí xây làng",
+                subtitle: "Nhập số làng để xem ngay chi phí xây hoàn chỉnh và số xu cần trả sau khi giảm 10%–40%.",
+                notice: "Dữ liệu được tham khảo từ các trang web công khai và tổng hợp cộng đồng, chỉ dùng để tham khảo; giá trị thực tế trong game có thể khác.",
+                inputLabel: "Nhập số làng",
+                inputPlaceholderLoading: "Đang tải dữ liệu...",
+                inputPlaceholderReady: "Nhập số làng",
+                inputPlaceholderFailed: "Tải dữ liệu thất bại",
+                originalCostLabel: "Chi phí gốc để xây hoàn chỉnh làng",
+                loading: "Đang đọc villages_cost.json...",
+                loaded: count => "Đã tải dữ liệu, tổng cộng " + count + " làng.",
+                loadFailed: error => "Không thể đọc villages_cost.json. Vui lòng kiểm tra tên tệp, vị trí và định dạng JSON. Lỗi: " + error,
+                jsonArrayError: "Định dạng JSON không đúng: cấp ngoài cùng phải là một mảng.",
+                jsonEmptyError: "Không có dữ liệu làng hợp lệ trong JSON.",
+                enterVillageNumber: "Vui lòng nhập số làng.",
+                noVillageData: "Hiện không có dữ liệu làng này",
+                noVillageConsole: number => "Hiện không có dữ liệu làng này: " + number,
+                villageNo: number => "Làng #" + number,
+                rawCost: amount => "Tổng xu gốc: " + amount + " xu",
+                pay: amount => "Cần trả: " + amount + " xu",
+                save: amount => "Tiết kiệm: " + amount,
+                coins: "xu",
+                tenThousand: "vạn xu",
+                hundredMillion: "trăm triệu xu",
+                trillion: "nghìn tỷ xu",
+                locale: "vi-VN"
+            }
+        };
+
+        document.getElementById("year").textContent = new Date().getFullYear();
+
+        function t(key, ...args) {
+            const langPack = i18n[currentLang] || i18n["zh-Hant"];
+            const value = langPack[key];
+
+            if (typeof value === "function") {
+                return value(...args);
+            }
+
+            return value || key;
+        }
+
+        function applyI18n() {
+            const langPack = i18n[currentLang] || i18n["zh-Hant"];
+
+            document.documentElement.lang = langPack.htmlLang;
+            document.title = t("pageTitle");
+
+            document.querySelectorAll("[data-i18n]").forEach(element => {
+                const key = element.getAttribute("data-i18n");
+                element.textContent = t(key);
+            });
+
+            if (villageInput.disabled) {
+                if (currentMessageType === "error") {
+                    villageInput.placeholder = t("inputPlaceholderFailed");
+                } else {
+                    villageInput.placeholder = t("inputPlaceholderLoading");
+                }
+            } else {
+                villageInput.placeholder = t("inputPlaceholderReady");
+            }
+
+            refreshCurrentMessage();
+
+            if (lastRenderedVillage) {
+                renderVillage(lastRenderedVillage);
+            }
+
+            languageSelect.value = currentLang;
+        }
+
+        function refreshCurrentMessage() {
+            if (!currentMessageKey) {
+                clearMessage();
+                return;
+            }
+
+            if (currentMessageKey === "loaded") {
+                showMessage(t("loaded", villages.length), currentMessageType, "loaded");
+                return;
+            }
+
+            if (currentMessageKey === "loading") {
+                showMessage(t("loading"), currentMessageType, "loading");
+                return;
+            }
+
+            if (currentMessageKey === "enterVillageNumber") {
+                showMessage(t("enterVillageNumber"), currentMessageType, "enterVillageNumber");
+                return;
+            }
+
+            if (currentMessageKey === "noVillageData") {
+                showMessage(t("noVillageData"), currentMessageType, "noVillageData");
+            }
+        }
+
+        async function loadVillages() {
+            try {
+                showMessage(t("loading"), "warning", "loading");
+
+                const response = await fetch(DATA_FILE, {
+                    cache: "no-store"
+                });
+
+                if (!response.ok) {
+                    throw new Error("HTTP " + response.status);
+                }
+
+                const data = await response.json();
+
+                if (!Array.isArray(data)) {
+                    throw new Error(t("jsonArrayError"));
+                }
+
+                villages = data
+                    .filter(item => {
+                        return (
+                            item &&
+                            item["編號"] !== undefined &&
+                            item["名稱"] !== undefined &&
+                            item["總金幣"] !== undefined
+                        );
+                    })
+                    .map(item => ({
+                        ...item,
+                        "編號": Number(item["編號"]),
+                        "總金幣": Number(item["總金幣"])
+                    }))
+                    .sort((a, b) => Number(a["編號"]) - Number(b["編號"]));
+
+                if (villages.length === 0) {
+                    throw new Error(t("jsonEmptyError"));
+                }
+
+                maxVillageNumber = Math.max(...villages.map(v => Number(v["編號"])));
+
+                enableUI();
+                showMessage(t("loaded", villages.length), "ok", "loaded");
+            } catch (error) {
+                disableUI();
+
+                showMessage(t("loadFailed", error.message), "error", null);
+            }
+        }
+
+        function enableUI() {
+            villageInput.disabled = false;
+            villageInput.placeholder = t("inputPlaceholderReady");
+            villageInput.focus();
+        }
+
+        function disableUI() {
+            villageInput.disabled = true;
+            villageInput.placeholder = t("inputPlaceholderFailed");
+        }
+
+        function sanitizeNumberInput(value) {
+            return String(value || "").replace(/\D/g, "");
+        }
+
+        function formatNumber(num) {
+            return Number(num).toLocaleString(t("locale"));
+        }
+
+        function formatCoins(num) {
+            const n = Number(num);
+
+            if (!Number.isFinite(n)) return "0 " + t("coins");
+
+            const trillion = 1000000000000;
+            const hundredMillion = 100000000;
+            const tenThousand = 10000;
+
+            if (currentLang === "zh-Hant") {
+                if (n >= trillion) {
+                    return trimDecimal(n / trillion) + "兆金幣";
+                }
+
+                if (n >= hundredMillion) {
+                    return trimDecimal(n / hundredMillion) + "億金幣";
+                }
+
+                if (n >= tenThousand) {
+                    return trimDecimal(n / tenThousand) + "萬金幣";
+                }
+
+                return formatNumber(n) + " 金幣";
+            }
+
+            if (currentLang === "vi") {
+                if (n >= trillion) {
+                    return trimDecimal(n / trillion) + " nghìn tỷ xu";
+                }
+
+                if (n >= hundredMillion) {
+                    return trimDecimal(n / hundredMillion) + " trăm triệu xu";
+                }
+
+                if (n >= tenThousand) {
+                    return trimDecimal(n / tenThousand) + " vạn xu";
+                }
+
+                return formatNumber(n) + " xu";
+            }
+
+            if (n >= trillion) {
+                return trimDecimal(n / trillion) + " trillion coins";
+            }
+
+            if (n >= 1000000000) {
+                return trimDecimal(n / 1000000000) + " billion coins";
+            }
+
+            if (n >= 1000000) {
+                return trimDecimal(n / 1000000) + " million coins";
+            }
+
+            return formatNumber(n) + " coins";
+        }
+
+        function trimDecimal(value) {
+            return Number(value.toFixed(3)).toString();
+        }
+
+        function showMessage(text, type = "error", key = null) {
+            message.textContent = text;
+            message.className = "message " + type;
+            currentMessageKey = key;
+            currentMessageType = type;
+        }
+
+        function clearMessage() {
+            message.textContent = "";
+            message.className = "message";
+            currentMessageKey = null;
+            currentMessageType = "";
+        }
+
+        function findVillageByNumber(numberText) {
+            if (!numberText) return null;
+
+            const villageNumber = Number(numberText);
+
+            if (!Number.isInteger(villageNumber)) return null;
+
+            return villages.find(v => Number(v["編號"]) === villageNumber) || null;
+        }
+
+        function handleVillageInput() {
+            const cleanValue = sanitizeNumberInput(villageInput.value);
+
+            if (villageInput.value !== cleanValue) {
+                villageInput.value = cleanValue;
+            }
+
+            if (!cleanValue) {
+                lastRenderedVillage = null;
+                result.classList.remove("show");
+                showMessage(t("enterVillageNumber"), "warning", "enterVillageNumber");
+                return;
+            }
+
+            const village = findVillageByNumber(cleanValue);
+
+            if (!village) {
+                lastRenderedVillage = null;
+                result.classList.remove("show");
+
+                console.warn(t("noVillageConsole", cleanValue));
+
+                showMessage(t("noVillageData"), "error", "noVillageData");
+                return;
+            }
+
+            renderVillage(village);
+        }
+
+        function changeVillageNumber(step) {
+            if (villageInput.disabled || villages.length === 0) return;
+
+            const currentValue = sanitizeNumberInput(villageInput.value);
+            let currentNumber = Number(currentValue);
+
+            if (!currentValue || !Number.isInteger(currentNumber)) {
+                currentNumber = 1;
+            }
+
+            let nextNumber = currentNumber + step;
+
+            if (nextNumber < 1) {
+                nextNumber = 1;
+            }
+
+            if (nextNumber > maxVillageNumber) {
+                nextNumber = maxVillageNumber;
+            }
+
+            villageInput.value = String(nextNumber);
+            handleVillageInput();
+        }
+
+        function renderVillage(village) {
+            clearMessage();
+
+            lastRenderedVillage = village;
+
+            const total = Number(village["總金幣"]);
+
+            villageNo.textContent = t("villageNo", village["編號"]);
+            villageName.textContent = village["名稱"];
+            villageCost.textContent = formatCoins(total);
+            rawCost.textContent = t("rawCost", formatNumber(total));
+
+            discountGrid.innerHTML = "";
+
+            discounts.forEach(discount => {
+                const payRate = (100 - discount) / 100;
+                const payAmount = Math.round(total * payRate);
+                const saveAmount = total - payAmount;
+
+                const card = document.createElement("div");
+                card.className = "discount-card";
+
+                card.innerHTML = `
+                    <div class="discount">${discount}% off</div>
+                    <div class="amount">
+                        ${formatCoins(payAmount)}
+                        <br>
+                        <span class="amount-small">
+                            ${t("pay", formatNumber(payAmount))}
+                        </span>
+                        <br>
+                        <span class="save-small">
+                            ${t("save", formatCoins(saveAmount))}
+                        </span>
+                    </div>
+                `;
+
+                discountGrid.appendChild(card);
+            });
+
+            result.classList.add("show");
+        }
+
+        languageSelect.addEventListener("change", event => {
+            currentLang = event.target.value;
+            localStorage.setItem("coin999_lang", currentLang);
+            applyI18n();
+        });
+
+        villageInput.addEventListener("input", handleVillageInput);
+
+        villageInput.addEventListener("keydown", event => {
+            if (event.key === "ArrowUp") {
+                event.preventDefault();
+                changeVillageNumber(1);
+            }
+
+            if (event.key === "ArrowDown") {
+                event.preventDefault();
+                changeVillageNumber(-1);
+            }
+        });
+
+        applyI18n();
+        loadVillages();
+    </script>
+</body>
+
+</html>
