@@ -91,6 +91,7 @@
 
         .language-select {
             width: auto;
+            min-width: 205px;
             min-height: 46px;
             padding: 9px 38px 9px 14px;
             font-size: 15px;
@@ -480,6 +481,11 @@
                 justify-content: center;
             }
 
+            .language-select {
+                width: 100%;
+                min-width: 0;
+            }
+
             .header {
                 padding: 16px 6px 12px;
             }
@@ -542,11 +548,6 @@
                 font-size: 14px;
                 font-weight: 850;
                 border-radius: 13px;
-            }
-
-            .language-select {
-                min-height: 44px;
-                font-size: 15px;
             }
 
             .hint {
@@ -649,10 +650,16 @@
     <main class="app">
         <div class="language-bar">
             <label for="languageSelect" data-i18n="languageLabel">語言</label>
-            <select id="languageSelect" class="language-select">
-                <option value="zh-Hant">繁體中文</option>
+            <select id="languageSelect" class="language-select" disabled>
+                <option value="zh-Hant">中文</option>
                 <option value="en">English</option>
                 <option value="vi">Tiếng Việt</option>
+                <option value="ja">日本語</option>
+                <option value="ko">한국어</option>
+                <option value="th">ไทย</option>
+                <option value="id">Bahasa Indonesia</option>
+                <option value="es">Español</option>
+                <option value="pt">Português</option>
             </select>
         </div>
 
@@ -696,7 +703,7 @@
             <div id="calcMessage" class="calc-message warning"></div>
 
             <div id="reachableResult" class="reachable-result">
-                <div class="label" data-i18n="reachableLabel">最多可蓋到</div>
+                <div class="label" data-i18n="reachableLabel">最多可到達</div>
                 <div id="reachableMain" class="main"></div>
 
                 <div class="detail" id="reachableDetail"></div>
@@ -729,11 +736,10 @@
             <div class="section-divider"></div>
 
             <label for="villageInput" data-i18n="inputLabel">輸入村落編號</label>
-
             <input id="villageInput" type="tel" inputmode="numeric" pattern="[0-9]*" placeholder="資料載入中..."
                 autocomplete="off" disabled />
 
-            <div id="message" class="message warning">正在讀取 villages_cost.json...</div>
+            <div id="message" class="message warning">正在讀取 i18n.json...</div>
 
             <div id="result" class="result">
                 <div class="village-info">
@@ -744,7 +750,6 @@
                 </div>
 
                 <div class="grid" id="discountGrid"></div>
-
                 <div id="rawCost" class="raw"></div>
             </div>
         </section>
@@ -756,13 +761,17 @@
 
     <script>
         let villages = [];
+        let i18n = {};
         let maxVillageNumber = 1;
         let currentLang = localStorage.getItem("coin999_lang") || "zh-Hant";
-        let currentMessageKey = "loading";
-        let currentMessageType = "warning";
+        let currentMessageKey = null;
+        let currentMessageType = "";
+        let currentMessageParams = {};
         let lastRenderedVillage = null;
+        let isI18nReady = false;
 
         const DATA_FILE = "villages_cost.json";
+        const I18N_FILE = "i18n.json";
 
         const villageInput = document.getElementById("villageInput");
         const currentVillageInput = document.getElementById("currentVillageInput");
@@ -790,212 +799,41 @@
 
         const discounts = [10, 20, 25, 30, 40];
 
-        const i18n = {
-            "zh-Hant": {
-                htmlLang: "zh-Hant",
-                pageTitle: "村落建造金額計算器",
-                languageLabel: "語言",
-                title: "村落建造金額計算器",
-                subtitle: "輸入目前村落與身上金幣，計算可以從現在蓋到哪一村；也可查詢單一村落建造金額。",
-                notice: "數據參考公開網頁與社群整理資料，僅供參考，實際遊戲內容請以官方或遊戲內顯示為準。",
-
-                reachableTitle: "我目前的金幣可以從現在蓋到哪一村？",
-                currentVillageInputLabel: "目前所在村落",
-                coinInputLabel: "輸入身上金幣",
-                discountSelectLabel: "選擇折扣",
-                discountNone: "無折扣",
-                coinHint: "請輸入你目前所在村落與身上金幣，系統會從目前村落開始累計計算。",
-                reachableLabel: "最多可蓋到",
-                usedCoinsLabel: "已使用金幣",
-                remainingCoinsLabel: "剩餘金幣",
-                nextVillageLabel: "下一村",
-                shortCoinsLabel: "還差金幣",
-
-                currentVillagePlaceholderLoading: "資料載入中...",
-                currentVillagePlaceholderReady: "",
-                currentVillagePlaceholderFailed: "資料載入失敗",
-                coinInputPlaceholderLoading: "資料載入中...",
-                coinInputPlaceholderReady: "",
-                coinInputPlaceholderFailed: "資料載入失敗",
-
-                inputLabel: "輸入村落編號",
-                inputPlaceholderLoading: "資料載入中...",
-                inputPlaceholderReady: "輸入村落編號",
-                inputPlaceholderFailed: "資料載入失敗",
-                originalCostLabel: "蓋完整座村落原價需要",
-
-                loading: "正在讀取 villages_cost.json...",
-                loaded: count => "資料載入完成，共 " + count + " 筆村落資料。",
-                loadFailed: error => "讀取 villages_cost.json 失敗。請確認檔案名稱、位置與 JSON 格式是否正確。錯誤訊息：" + error,
-                jsonArrayError: "JSON 格式錯誤：最外層必須是陣列",
-                jsonEmptyError: "JSON 內沒有可用的村落資料",
-
-                enterVillageNumber: "請輸入村落編號。",
-                noVillageData: "目前無此村落資料",
-                noVillageConsole: number => "目前無此村落資料：" + number,
-                villageNo: number => "村落 #" + number,
-                rawCost: amount => "原始總金幣：" + amount + " 金幣",
-                pay: amount => "需支付：" + amount + " 金幣",
-                save: amount => "省下：" + amount,
-
-                coins: "金幣",
-                locale: "zh-TW",
-
-                enterCurrentVillageAndCoins: "請輸入目前所在村落與身上金幣。",
-                enterCurrentVillage: "請輸入目前所在村落。",
-                enterCoins: "請輸入身上金幣。",
-                currentVillageNotFound: "目前所在村落不在資料內。",
-                reachableVillage: (number, name) => "村落 #" + number + "｜" + name,
-                cannotBuildCurrentVillage: number => "目前金幣還不足以蓋完第 " + number + " 村",
-                buildCountFromCurrent: (start, count) => "從第 " + start + " 村開始，共可完整蓋完 " + count + " 座村落",
-                selectedDiscount: discount => discount === 0 ? "套用折扣：無折扣" : "套用折扣：" + discount + "% off",
-                nextVillage: (number, name) => "村落 #" + number + "｜" + name,
-                noNextVillage: "已達目前資料最後一村",
-                noShortage: "不缺，已達最後資料"
-            },
-            "en": {
-                htmlLang: "en",
-                pageTitle: "Village Build Cost Calculator",
-                languageLabel: "Language",
-                title: "Village Build Cost Calculator",
-                subtitle: "Enter your current village and coins to calculate how far you can build, or check a single village cost.",
-                notice: "Data is based on publicly available web pages and community references. For reference only; actual in-game values may vary.",
-
-                reachableTitle: "How far can I build from my current village?",
-                currentVillageInputLabel: "Current village",
-                coinInputLabel: "Enter your coins",
-                discountSelectLabel: "Select discount",
-                discountNone: "No discount",
-                coinHint: "Enter your current village and coins. The system calculates cumulatively from your current village.",
-                reachableLabel: "Maximum reachable village",
-                usedCoinsLabel: "Coins used",
-                remainingCoinsLabel: "Coins remaining",
-                nextVillageLabel: "Next village",
-                shortCoinsLabel: "Coins short",
-
-                currentVillagePlaceholderLoading: "Loading data...",
-                currentVillagePlaceholderReady: "",
-                currentVillagePlaceholderFailed: "Failed to load data",
-                coinInputPlaceholderLoading: "Loading data...",
-                coinInputPlaceholderReady: "",
-                coinInputPlaceholderFailed: "Failed to load data",
-
-                inputLabel: "Enter village number",
-                inputPlaceholderLoading: "Loading data...",
-                inputPlaceholderReady: "Enter village number",
-                inputPlaceholderFailed: "Failed to load data",
-                originalCostLabel: "Original full village cost",
-
-                loading: "Loading villages_cost.json...",
-                loaded: count => "Data loaded. " + count + " village records found.",
-                loadFailed: error => "Failed to load villages_cost.json. Please check the file name, location, and JSON format. Error: " + error,
-                jsonArrayError: "Invalid JSON format: the top level must be an array.",
-                jsonEmptyError: "No usable village data found in the JSON file.",
-
-                enterVillageNumber: "Please enter a village number.",
-                noVillageData: "No village data available",
-                noVillageConsole: number => "No village data available: " + number,
-                villageNo: number => "Village #" + number,
-                rawCost: amount => "Original total coins: " + amount + " coins",
-                pay: amount => "Pay: " + amount + " coins",
-                save: amount => "Save: " + amount,
-
-                coins: "coins",
-                locale: "en-US",
-
-                enterCurrentVillageAndCoins: "Please enter your current village and coins.",
-                enterCurrentVillage: "Please enter your current village.",
-                enterCoins: "Please enter your coins.",
-                currentVillageNotFound: "Your current village is not found in the data.",
-                reachableVillage: (number, name) => "Village #" + number + " | " + name,
-                cannotBuildCurrentVillage: number => "You do not have enough coins to finish Village " + number + ".",
-                buildCountFromCurrent: (start, count) => "Starting from Village " + start + ", you can fully complete " + count + " village(s).",
-                selectedDiscount: discount => discount === 0 ? "Discount applied: none" : "Discount applied: " + discount + "% off",
-                nextVillage: (number, name) => "Village #" + number + " | " + name,
-                noNextVillage: "You have reached the last village in the current data.",
-                noShortage: "No shortage. Last available village reached."
-            },
-            "vi": {
-                htmlLang: "vi",
-                pageTitle: "Công cụ tính chi phí xây làng",
-                languageLabel: "Ngôn ngữ",
-                title: "Công cụ tính chi phí xây làng",
-                subtitle: "Nhập làng hiện tại và số xu hiện có để tính có thể xây đến làng nào; hoặc tra chi phí từng làng.",
-                notice: "Dữ liệu được tham khảo từ các trang web công khai và tổng hợp cộng đồng, chỉ dùng để tham khảo; giá trị thực tế trong game có thể khác.",
-
-                reachableTitle: "Có thể xây từ làng hiện tại đến làng nào?",
-                currentVillageInputLabel: "Làng hiện tại",
-                coinInputLabel: "Nhập số xu hiện có",
-                discountSelectLabel: "Chọn giảm giá",
-                discountNone: "Không giảm giá",
-                coinHint: "Nhập làng hiện tại và số xu hiện có. Hệ thống sẽ tính cộng dồn từ làng hiện tại.",
-                reachableLabel: "Có thể xây tối đa đến",
-                usedCoinsLabel: "Xu đã dùng",
-                remainingCoinsLabel: "Xu còn lại",
-                nextVillageLabel: "Làng tiếp theo",
-                shortCoinsLabel: "Còn thiếu xu",
-
-                currentVillagePlaceholderLoading: "Đang tải dữ liệu...",
-                currentVillagePlaceholderReady: "",
-                currentVillagePlaceholderFailed: "Tải dữ liệu thất bại",
-                coinInputPlaceholderLoading: "Đang tải dữ liệu...",
-                coinInputPlaceholderReady: "",
-                coinInputPlaceholderFailed: "Tải dữ liệu thất bại",
-
-                inputLabel: "Nhập số làng",
-                inputPlaceholderLoading: "Đang tải dữ liệu...",
-                inputPlaceholderReady: "Nhập số làng",
-                inputPlaceholderFailed: "Tải dữ liệu thất bại",
-                originalCostLabel: "Chi phí gốc để xây hoàn chỉnh làng",
-
-                loading: "Đang đọc villages_cost.json...",
-                loaded: count => "Đã tải dữ liệu, tổng cộng " + count + " làng.",
-                loadFailed: error => "Không thể đọc villages_cost.json. Vui lòng kiểm tra tên tệp, vị trí và định dạng JSON. Lỗi: " + error,
-                jsonArrayError: "Định dạng JSON không đúng: cấp ngoài cùng phải là một mảng.",
-                jsonEmptyError: "Không có dữ liệu làng hợp lệ trong JSON.",
-
-                enterVillageNumber: "Vui lòng nhập số làng.",
-                noVillageData: "Hiện không có dữ liệu làng này",
-                noVillageConsole: number => "Hiện không có dữ liệu làng này: " + number,
-                villageNo: number => "Làng #" + number,
-                rawCost: amount => "Tổng xu gốc: " + amount + " xu",
-                pay: amount => "Cần trả: " + amount + " xu",
-                save: amount => "Tiết kiệm: " + amount,
-
-                coins: "xu",
-                locale: "vi-VN",
-
-                enterCurrentVillageAndCoins: "Vui lòng nhập làng hiện tại và số xu hiện có.",
-                enterCurrentVillage: "Vui lòng nhập làng hiện tại.",
-                enterCoins: "Vui lòng nhập số xu hiện có.",
-                currentVillageNotFound: "Không tìm thấy làng hiện tại trong dữ liệu.",
-                reachableVillage: (number, name) => "Làng #" + number + " | " + name,
-                cannotBuildCurrentVillage: number => "Số xu hiện có chưa đủ để xây xong làng " + number + ".",
-                buildCountFromCurrent: (start, count) => "Bắt đầu từ làng " + start + ", có thể xây hoàn chỉnh " + count + " làng.",
-                selectedDiscount: discount => discount === 0 ? "Giảm giá áp dụng: không có" : "Giảm giá áp dụng: " + discount + "% off",
-                nextVillage: (number, name) => "Làng #" + number + " | " + name,
-                noNextVillage: "Đã đến làng cuối cùng trong dữ liệu hiện tại.",
-                noShortage: "Không thiếu, đã đến làng cuối cùng."
-            }
-        };
-
         document.getElementById("year").textContent = new Date().getFullYear();
 
-        function t(key, ...args) {
-            const langPack = i18n[currentLang] || i18n["zh-Hant"];
-            const value = langPack[key];
+        function interpolate(template, params = {}) {
+            return String(template).replace(/\{(\w+)\}/g, function (_, key) {
+                return params[key] !== undefined ? params[key] : "{" + key + "}";
+            });
+        }
 
-            if (typeof value === "function") {
-                return value(...args);
-            }
+        function t(key, params = {}) {
+            const langPack = i18n[currentLang] || i18n["zh-Hant"] || {};
+            const zhPack = i18n["zh-Hant"] || {};
+            const value = langPack[key] !== undefined ? langPack[key] : zhPack[key];
 
-            return value !== undefined ? value : key;
+            if (value === undefined) return key;
+
+            return interpolate(value, params);
+        }
+
+        function setInitialLoadingState() {
+            languageSelect.disabled = true;
+            villageInput.disabled = true;
+            currentVillageInput.disabled = true;
+            coinInput.disabled = true;
+            discountSelect.disabled = true;
+
+            message.textContent = "正在讀取 i18n.json...";
+            message.className = "message warning";
         }
 
         function applyI18n() {
-            const langPack = i18n[currentLang] || i18n["zh-Hant"];
+            if (!isI18nReady) return;
 
-            document.documentElement.lang = langPack.htmlLang;
+            const langPack = i18n[currentLang] || i18n["zh-Hant"] || {};
+
+            document.documentElement.lang = langPack.htmlLang || currentLang;
             document.title = t("pageTitle");
 
             document.querySelectorAll("[data-i18n]").forEach(element => {
@@ -1039,28 +877,59 @@
         }
 
         function refreshCurrentMessage() {
-            if (!currentMessageKey) {
-                clearMessage();
-                return;
-            }
+            if (!currentMessageKey) return;
 
-            if (currentMessageKey === "loaded") {
-                showMessage(t("loaded", villages.length), currentMessageType, "loaded");
-                return;
-            }
+            showMessage(
+                t(currentMessageKey, currentMessageParams),
+                currentMessageType,
+                currentMessageKey,
+                currentMessageParams
+            );
+        }
 
-            if (currentMessageKey === "loading") {
-                showMessage(t("loading"), currentMessageType, "loading");
-                return;
-            }
+        async function loadI18n() {
+            try {
+                showPlainMessage("正在讀取 i18n.json...", "warning");
 
-            if (currentMessageKey === "enterVillageNumber") {
-                showMessage(t("enterVillageNumber"), currentMessageType, "enterVillageNumber");
-                return;
-            }
+                const response = await fetch(I18N_FILE, {
+                    cache: "no-store"
+                });
 
-            if (currentMessageKey === "noVillageData") {
-                showMessage(t("noVillageData"), currentMessageType, "noVillageData");
+                if (!response.ok) {
+                    throw new Error("HTTP " + response.status);
+                }
+
+                const data = await response.json();
+
+                if (!data || typeof data !== "object" || Array.isArray(data)) {
+                    throw new Error("Invalid i18n JSON");
+                }
+
+                if (!data["zh-Hant"]) {
+                    throw new Error("Missing zh-Hant language pack");
+                }
+
+                i18n = data;
+                isI18nReady = true;
+
+                if (!i18n[currentLang]) {
+                    currentLang = "zh-Hant";
+                    localStorage.setItem("coin999_lang", currentLang);
+                }
+
+                languageSelect.disabled = false;
+                applyI18n();
+            } catch (error) {
+                isI18nReady = false;
+                i18n = {};
+                disableUI();
+
+                showPlainMessage(
+                    "讀取 i18n.json 失敗，請確認檔案名稱、位置與 JSON 格式是否正確。錯誤訊息：" + error.message,
+                    "error"
+                );
+
+                console.error("i18n load failed:", error);
             }
         }
 
@@ -1111,14 +980,18 @@
                 maxVillageNumber = Math.max(...villages.map(v => Number(v["編號"])));
 
                 enableUI();
-                showMessage(t("loaded", villages.length), "ok", "loaded");
+                showMessage(t("loaded", { count: villages.length }), "ok", "loaded", {
+                    count: villages.length
+                });
             } catch (error) {
                 disableUI();
-                showMessage(t("loadFailed", error.message), "error", null);
+                showMessage(t("loadFailed", { error: error.message }), "error", null);
             }
         }
 
         function enableUI() {
+            languageSelect.disabled = false;
+
             villageInput.disabled = false;
             villageInput.placeholder = t("inputPlaceholderReady");
 
@@ -1135,15 +1008,19 @@
 
         function disableUI() {
             villageInput.disabled = true;
-            villageInput.placeholder = t("inputPlaceholderFailed");
-
             currentVillageInput.disabled = true;
-            currentVillageInput.placeholder = t("currentVillagePlaceholderFailed");
-
             coinInput.disabled = true;
-            coinInput.placeholder = t("coinInputPlaceholderFailed");
-
             discountSelect.disabled = true;
+
+            if (isI18nReady) {
+                villageInput.placeholder = t("inputPlaceholderFailed");
+                currentVillageInput.placeholder = t("currentVillagePlaceholderFailed");
+                coinInput.placeholder = t("coinInputPlaceholderFailed");
+            } else {
+                villageInput.placeholder = "資料載入失敗";
+                currentVillageInput.placeholder = "資料載入失敗";
+                coinInput.placeholder = "資料載入失敗";
+            }
         }
 
         function sanitizeNumberInput(value) {
@@ -1167,32 +1044,34 @@
             const hundredMillion = 100000000;
             const tenThousand = 10000;
 
-            if (currentLang === "zh-Hant") {
-                if (n >= trillion) return trimDecimal(n / trillion) + "兆金幣";
-                if (n >= hundredMillion) return trimDecimal(n / hundredMillion) + "億金幣";
-                if (n >= tenThousand) return trimDecimal(n / tenThousand) + "萬金幣";
-                return formatNumber(n) + " 金幣";
+            if (currentLang === "zh-Hant" || currentLang === "vi") {
+                if (n >= trillion) return trimDecimal(n / trillion) + t("unitTrillion");
+                if (n >= hundredMillion) return trimDecimal(n / hundredMillion) + t("unitHundredMillion");
+                if (n >= tenThousand) return trimDecimal(n / tenThousand) + t("unitTenThousand");
+                return formatNumber(n) + t("unitPlain");
             }
 
-            if (currentLang === "vi") {
-                if (n >= trillion) return trimDecimal(n / trillion) + " nghìn tỷ xu";
-                if (n >= hundredMillion) return trimDecimal(n / hundredMillion) + " trăm triệu xu";
-                if (n >= tenThousand) return trimDecimal(n / tenThousand) + " vạn xu";
-                return formatNumber(n) + " xu";
-            }
+            if (n >= trillion) return trimDecimal(n / trillion) + t("unitTrillion");
+            if (n >= 1000000000) return trimDecimal(n / 1000000000) + t("unitBillion");
+            if (n >= 1000000) return trimDecimal(n / 1000000) + t("unitMillion");
 
-            if (n >= trillion) return trimDecimal(n / trillion) + " trillion coins";
-            if (n >= 1000000000) return trimDecimal(n / 1000000000) + " billion coins";
-            if (n >= 1000000) return trimDecimal(n / 1000000) + " million coins";
-
-            return formatNumber(n) + " coins";
+            return formatNumber(n) + t("unitPlain");
         }
 
-        function showMessage(text, type = "error", key = null) {
+        function showPlainMessage(text, type = "warning") {
+            message.textContent = text;
+            message.className = "message " + type;
+            currentMessageKey = null;
+            currentMessageType = type;
+            currentMessageParams = {};
+        }
+
+        function showMessage(text, type = "error", key = null, params = {}) {
             message.textContent = text;
             message.className = "message " + type;
             currentMessageKey = key;
             currentMessageType = type;
+            currentMessageParams = params || {};
         }
 
         function clearMessage() {
@@ -1200,6 +1079,7 @@
             message.className = "message";
             currentMessageKey = null;
             currentMessageType = "";
+            currentMessageParams = {};
         }
 
         function showCalcMessage(text, type = "warning") {
@@ -1241,7 +1121,7 @@
             if (!village) {
                 lastRenderedVillage = null;
                 result.classList.remove("show");
-                console.warn(t("noVillageConsole", cleanValue));
+                console.warn(t("noVillageConsole", { number: cleanValue }));
                 showMessage(t("noVillageData"), "error", "noVillageData");
                 return;
             }
@@ -1275,10 +1155,10 @@
 
             const total = Number(village["總金幣"]);
 
-            villageNo.textContent = t("villageNo", village["編號"]);
+            villageNo.textContent = t("villageNo", { number: village["編號"] });
             villageName.textContent = village["名稱"];
             villageCost.textContent = formatCoins(total);
-            rawCost.textContent = t("rawCost", formatNumber(total));
+            rawCost.textContent = t("rawCost", { amount: formatNumber(total) });
 
             discountGrid.innerHTML = "";
 
@@ -1295,9 +1175,9 @@
                     <div class="amount">
                         ${formatCoins(payAmount)}
                         <br>
-                        <span class="amount-small">${t("pay", formatNumber(payAmount))}</span>
+                        <span class="amount-small">${t("pay", { amount: formatNumber(payAmount) })}</span>
                         <br>
-                        <span class="save-small">${t("save", formatCoins(saveAmount))}</span>
+                        <span class="save-small">${t("save", { amount: formatCoins(saveAmount) })}</span>
                     </div>
                 `;
 
@@ -1332,8 +1212,14 @@
             return Math.round(Number(originalCost) * payRate);
         }
 
+        function getSelectedDiscountText(discount) {
+            if (discount === 0) return t("selectedDiscountNone");
+            return t("selectedDiscount", { discount });
+        }
+
         function calculateReachableVillage() {
             if (
+                !isI18nReady ||
                 currentVillageInput.disabled ||
                 coinInput.disabled ||
                 villages.length === 0
@@ -1386,9 +1272,8 @@
             const selectedDiscount = Number(discountSelect.value || 0);
 
             let spent = 0;
-            let lastVillage = null;
-            let nextVillage = null;
             let completedCount = 0;
+            let nextVillageToBuild = villages[startIndex];
 
             for (let i = startIndex; i < villages.length; i++) {
                 const village = villages[i];
@@ -1396,46 +1281,81 @@
 
                 if (spent + cost <= ownedCoins) {
                     spent += cost;
-                    lastVillage = village;
                     completedCount++;
+                    nextVillageToBuild = villages[i + 1] || null;
                 } else {
-                    nextVillage = village;
+                    nextVillageToBuild = village;
                     break;
                 }
             }
 
             const remaining = ownedCoins - spent;
 
-            if (!lastVillage) {
+            const reachableVillageNumber = startVillageNumber + completedCount;
+            const reachableVillageData =
+                villages.find(v => Number(v["編號"]) === reachableVillageNumber) || null;
+
+            if (completedCount === 0) {
                 const currentVillage = villages[startIndex];
                 const currentVillageCost = getDiscountedCost(currentVillage["總金幣"], selectedDiscount);
                 const shortage = Math.max(currentVillageCost - ownedCoins, 0);
+                const formattedShortage = formatCoins(shortage);
 
-                reachableMain.textContent = t("cannotBuildCurrentVillage", currentVillage["編號"]);
-                reachableDetail.textContent = t("selectedDiscount", selectedDiscount);
+                reachableMain.textContent = t("cannotBuildCurrentVillage", {
+                    number: currentVillage["編號"],
+                    shortage: formattedShortage
+                });
+
+                reachableDetail.textContent =
+                    getSelectedDiscountText(selectedDiscount) +
+                    "｜" +
+                    t("currentVillageCost", {
+                        cost: formatCoins(currentVillageCost)
+                    });
+
                 usedCoins.textContent = formatCoins(0);
                 remainingCoins.textContent = formatCoins(ownedCoins);
-                nextVillageInfo.textContent = t("nextVillage", currentVillage["編號"], currentVillage["名稱"]);
-                shortCoins.textContent = formatCoins(shortage);
+
+                nextVillageInfo.textContent = t("nextVillage", {
+                    number: currentVillage["編號"],
+                    name: currentVillage["名稱"]
+                });
+
+                shortCoins.textContent = formattedShortage;
 
                 reachableResult.classList.add("show");
                 return;
             }
 
-            reachableMain.textContent = t("reachableVillage", lastVillage["編號"], lastVillage["名稱"]);
+            if (reachableVillageData) {
+                reachableMain.textContent = t("reachableVillage", {
+                    number: reachableVillageData["編號"],
+                    name: reachableVillageData["名稱"]
+                });
+            } else {
+                reachableMain.textContent = t("noNextVillage");
+            }
+
             reachableDetail.textContent =
-                t("buildCountFromCurrent", startVillageNumber, completedCount) +
+                t("buildCountFromCurrent", {
+                    start: startVillageNumber,
+                    count: completedCount
+                }) +
                 "｜" +
-                t("selectedDiscount", selectedDiscount);
+                getSelectedDiscountText(selectedDiscount);
 
             usedCoins.textContent = formatCoins(spent);
             remainingCoins.textContent = formatCoins(remaining);
 
-            if (nextVillage) {
-                const nextCost = getDiscountedCost(nextVillage["總金幣"], selectedDiscount);
+            if (nextVillageToBuild) {
+                const nextCost = getDiscountedCost(nextVillageToBuild["總金幣"], selectedDiscount);
                 const shortage = Math.max(nextCost - remaining, 0);
 
-                nextVillageInfo.textContent = t("nextVillage", nextVillage["編號"], nextVillage["名稱"]);
+                nextVillageInfo.textContent = t("nextVillage", {
+                    number: nextVillageToBuild["編號"],
+                    name: nextVillageToBuild["名稱"]
+                });
+
                 shortCoins.textContent = formatCoins(shortage);
             } else {
                 nextVillageInfo.textContent = t("noNextVillage");
@@ -1469,8 +1389,18 @@
         coinInput.addEventListener("input", handleCoinInput);
         discountSelect.addEventListener("change", calculateReachableVillage);
 
-        applyI18n();
-        loadVillages();
+        async function init() {
+            setInitialLoadingState();
+            await loadI18n();
+
+            if (!isI18nReady) {
+                return;
+            }
+
+            await loadVillages();
+        }
+
+        init();
     </script>
 </body>
 
