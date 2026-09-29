@@ -951,27 +951,32 @@
                     throw new Error(t("jsonArrayError"));
                 }
 
+                // 同時相容新版英文欄位 (Village Level, Village Name, 總金幣數值) 與舊版欄位
                 villages = data
-                    .filter(item => {
-                        return (
-                            item &&
-                            item["編號"] !== undefined &&
-                            item["名稱"] !== undefined &&
-                            item["總金幣"] !== undefined
-                        );
+                    .map(item => {
+                        const no = item["編號"] ?? item["Village Level"];
+                        const name = item["名稱"] ?? item["Village Name"] ?? "";
+                        const coins = item["總金幣"] ?? item["總金幣數值"];
+
+                        return {
+                            ...item,
+                            "編號": Number(no),
+                            "名稱": String(name),
+                            "總金幣": Number(coins)
+                        };
                     })
-                    .map(item => ({
-                        ...item,
-                        "編號": Number(item["編號"]),
-                        "總金幣": Number(item["總金幣"])
-                    }))
                     .filter(item => {
                         return (
                             Number.isFinite(item["編號"]) &&
+                            item["名稱"] !== "" &&
                             Number.isFinite(item["總金幣"])
                         );
                     })
-                    .sort((a, b) => Number(a["編號"]) - Number(b["編號"]));
+                    .sort((a, b) => itemNumber(a) - itemNumber(b));
+
+                function itemNumber(v) {
+                    return Number(v["編號"]);
+                }
 
                 if (villages.length === 0) {
                     throw new Error(t("jsonEmptyError"));
