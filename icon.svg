@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <linearGradient id="roof" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f87171"/>
+      <stop offset="1" stop-color="#dc2626"/>
+    </linearGradient>
+    <linearGradient id="coin" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fde68a"/>
+      <stop offset="0.55" stop-color="#fbbf24"/>
+      <stop offset="1" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 背景 -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <circle cx="400" cy="112" r="150" fill="#ffffff" opacity="0.08"/>
+
+  <!-- 草地 -->
+  <path d="M0 392 Q256 340 512 392 V400 Q512 512 400 512 H112 Q0 512 0 400 Z" fill="#34d399"/>
+  <path d="M0 420 Q256 372 512 420 V400 Q512 512 400 512 H112 Q0 512 0 400 Z" fill="#10b981"/>
+
+  <!-- 房子 -->
+  <rect x="104" y="232" width="204" height="160" rx="10" fill="#fff7ed"/>
+  <rect x="236" y="150" width="34" height="60" rx="5" fill="#92400e"/>
+  <path d="M84 246 L206 136 L328 246 Z" fill="url(#roof)" stroke="#b91c1c" stroke-width="10" stroke-linejoin="round"/>
+  <rect x="180" y="304" width="52" height="88" rx="8" fill="#92400e"/>
+  <circle cx="220" cy="350" r="5" fill="#fbbf24"/>
+  <rect x="124" y="268" width="40" height="40" rx="6" fill="#93c5fd" stroke="#1e40af" stroke-width="6"/>
+  <rect x="250" y="268" width="40" height="40" rx="6" fill="#93c5fd" stroke="#1e40af" stroke-width="6"/>
+
+  <!-- 金幣 -->
+  <circle cx="362" cy="330" r="98" fill="#92400e" opacity="0.25"/>
+  <circle cx="356" cy="320" r="96" fill="url(#coin)" stroke="#b45309" stroke-width="10"/>
+  <circle cx="356" cy="320" r="70" fill="none" stroke="#fef3c7" stroke-width="8" opacity="0.8"/>
+  <path d="M356 270 V370 M380 290 Q380 276 356 276 Q330 276 330 298 Q330 318 356 320 Q382 322 382 344 Q382 364 356 364 Q332 364 330 348"
+        fill="none" stroke="#92400e" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
