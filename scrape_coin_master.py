@@ -1,5 +1,7 @@
 import json
 import re
+from decimal import Decimal
+
 from bs4 import BeautifulSoup
 import requests
 
@@ -25,7 +27,8 @@ def parse_total_coins(cost_text: str) -> int:
     if not match:
         return 0
 
-    number = float(match.group(1))
+    # 用 Decimal 避免浮點誤差（float 會讓 16.4 million 變成 16399999）
+    number = Decimal(match.group(1))
     unit = match.group(2)
 
     multiplier = {
@@ -111,6 +114,14 @@ def scrape():
             continue
 
         level = int(level_raw)
+
+        # 來源網頁偶有編號打錯（例如 Pizza Place 被標成 443，實際是 445），
+        # 編號不連續時依順序改正並提示
+        expected = data[-1]["Village Level"] + 1 if data else 1
+        if level != expected:
+            print(f"警告：{name} 的編號是 {level}，依順序應為 {expected}，已自動改正。")
+            level = expected
+
         total_coins = parse_total_coins(cost_raw)
         chinese_cost = format_chinese_cost(total_coins)
 

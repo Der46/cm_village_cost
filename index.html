@@ -1346,16 +1346,20 @@
             const n = Number(num);
             if (!Number.isFinite(n)) return "0" + t("unitPlain");
 
-            if (currentLang === "zh-Hant" || currentLang === "vi") {
-                if (n >= 1e12) return trimDecimal(n / 1e12) + t("unitTrillion");
-                if (n >= 1e8) return trimDecimal(n / 1e8) + t("unitHundredMillion");
-                if (n >= 1e4) return trimDecimal(n / 1e4) + t("unitTenThousand");
-                return formatNumber(n) + t("unitPlain");
-            }
+            const units = currentLang === "zh-Hant" || currentLang === "vi"
+                ? [[1e12, "unitTrillion"], [1e8, "unitHundredMillion"], [1e4, "unitTenThousand"]]
+                : [[1e12, "unitTrillion"], [1e9, "unitBillion"], [1e6, "unitMillion"]];
 
-            if (n >= 1e12) return trimDecimal(n / 1e12) + t("unitTrillion");
-            if (n >= 1e9) return trimDecimal(n / 1e9) + t("unitBillion");
-            if (n >= 1e6) return trimDecimal(n / 1e6) + t("unitMillion");
+            for (let i = 0; i < units.length; i++) {
+                const [size, key] = units[i];
+                if (n < size) continue;
+                const value = Number(trimDecimal(n / size));
+                // Rounding can reach the next unit (99,999,999 -> "10000萬"); show it as "1億" instead
+                if (i > 0 && value * size >= units[i - 1][0]) {
+                    return trimDecimal(n / units[i - 1][0]) + t(units[i - 1][1]);
+                }
+                return value + t(key);
+            }
             return formatNumber(n) + t("unitPlain");
         }
 
@@ -1399,7 +1403,7 @@
             });
 
             input.addEventListener("input", () => {
-                const clean = digits(input.value).slice(0, 4);
+                const clean = digits(input.value).replace(/^0+/, "").slice(0, 4);
                 if (input.value !== clean) input.value = clean;
                 setVillageValue(id, clean);
             });
@@ -1615,7 +1619,7 @@
                 main = `<div class="vault-big">${escapeHtml(formatCoins(cost - owned))}</div>`;
                 detail = `<div class="vault-line">${escapeHtml(t("currentVillageCost", { cost: formatCoins(cost) }))}</div>`;
             } else {
-                const reached = byNumber.get(start + done);
+                const reached = villages[startIndex + done];
                 label = t("reachableLabel");
                 main = `<div class="vault-big text">${escapeHtml(reached ? villageLabel(reached) : t("noNextVillage"))}</div>`;
                 detail = `<div class="vault-line">${escapeHtml(t("buildCountFromCurrent", { start, count: done }))}</div>`;
@@ -1624,7 +1628,7 @@
             // `next` is the village still being built (null when everything is built).
             // Finishing it reveals the village after it, which is what "下一村" shows.
             const building = next;
-            next = building ? byNumber.get(building.no + 1) || null : null;
+            next = building ? villages[villages.indexOf(building) + 1] || null : null;
             const shortage = building ? costOf(building, d) - remaining : 0n;
 
             vault.innerHTML = `
