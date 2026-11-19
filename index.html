@@ -677,6 +677,49 @@
             margin: 0;
         }
 
+        /* LINE contact button */
+        .contact {
+            margin-bottom: 18px;
+        }
+
+        .contact-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 50px;
+            padding: 0 26px;
+            border-radius: 999px;
+            background: #06a74b;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 800;
+            text-decoration: none;
+            box-shadow: inset 0 -3px 0 rgba(0, 70, 30, 0.35), 0 4px 10px rgba(6, 120, 55, 0.25);
+            transition: background-color 0.15s ease, transform 0.15s ease;
+        }
+
+        .contact-btn:hover {
+            background: #05923f;
+        }
+
+        .contact-btn:active {
+            transform: translateY(1px);
+        }
+
+        .contact-btn svg {
+            width: 22px;
+            height: 22px;
+            fill: #ffffff;
+            flex: none;
+        }
+
+        .contact-hint {
+            margin-top: 8px !important;
+            font-size: 13px;
+            color: var(--ink-soft);
+        }
+
         .app {
             padding-bottom: 72px;
         }
@@ -1219,6 +1262,16 @@
         </section>
 
         <footer class="footer">
+            <div class="contact">
+                <a class="contact-btn" href="https://line.me/ti/g2/vFTIlDhsyEN9wo0SYbIpDBL9AsHbK-mbHTS5YA?utm_source=invitation&amp;utm_medium=link_copy&amp;utm_campaign=default"
+                    target="_blank" rel="noopener noreferrer">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 3C6.5 3 2 6.6 2 11c0 3.9 3.5 7.2 8.3 7.9.3.1.8.2.9.5.1.3.1.7 0 1l-.1.9c0 .3-.2 1 .9.5 1.1-.5 6-3.5 8.2-6.1C21.6 14.2 22 12.7 22 11c0-4.4-4.5-8-10-8Z" />
+                    </svg>
+                    <span data-i18n="contactDev">聯絡網頁開發者</span>
+                </a>
+                <p class="contact-hint" data-i18n="contactHint">加入 LINE 群組後請標記 @CSL</p>
+            </div>
             <p data-i18n="notice">數據參考公開網頁與社群整理資料，僅供參考，實際遊戲內容請以官方或遊戲內顯示為準。</p>
             <p id="dataCount"></p>
             <p>© <span id="year"></span> 大佬群CSL</p>

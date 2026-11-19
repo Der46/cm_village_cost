@@ -93,7 +93,9 @@
         "mapClose": "關閉",
         "mapNoMatch": "找不到符合的村落",
         "mapPriceNote": "價格已套用：{discount}",
-        "mapCurrentTag": "目前村落"
+        "mapCurrentTag": "目前村落",
+        "contactDev": "聯絡網頁開發者",
+        "contactHint": "加入 LINE 群組後請標記 @CSL"
     },
     "en": {
         "htmlLang": "en",
@@ -189,7 +191,9 @@
         "mapClose": "Close",
         "mapNoMatch": "No matching village",
         "mapPriceNote": "Prices shown with: {discount}",
-        "mapCurrentTag": "Current"
+        "mapCurrentTag": "Current",
+        "contactDev": "Contact the developer",
+        "contactHint": "After joining the LINE group, please tag @CSL"
     },
     "vi": {
         "htmlLang": "vi",
@@ -285,7 +289,9 @@
         "mapClose": "Đóng",
         "mapNoMatch": "Không tìm thấy làng phù hợp",
         "mapPriceNote": "Giá đã áp dụng: {discount}",
-        "mapCurrentTag": "Làng hiện tại"
+        "mapCurrentTag": "Làng hiện tại",
+        "contactDev": "Liên hệ nhà phát triển",
+        "contactHint": "Sau khi vào nhóm LINE, vui lòng gắn thẻ @CSL"
     },
     "ja": {
         "htmlLang": "ja",
@@ -381,7 +387,9 @@
         "mapClose": "閉じる",
         "mapNoMatch": "該当する村がありません",
         "mapPriceNote": "表示価格：{discount}",
-        "mapCurrentTag": "現在の村"
+        "mapCurrentTag": "現在の村",
+        "contactDev": "開発者に連絡",
+        "contactHint": "LINEグループに参加後、@CSL をメンションしてください"
     },
     "ko": {
         "htmlLang": "ko",
@@ -477,7 +485,9 @@
         "mapClose": "닫기",
         "mapNoMatch": "일치하는 마을이 없어요",
         "mapPriceNote": "적용된 가격: {discount}",
-        "mapCurrentTag": "현재 마을"
+        "mapCurrentTag": "현재 마을",
+        "contactDev": "개발자에게 연락",
+        "contactHint": "LINE 그룹에 참여한 뒤 @CSL 을 태그해 주세요"
     },
     "th": {
         "htmlLang": "th",
@@ -573,7 +583,9 @@
         "mapClose": "ปิด",
         "mapNoMatch": "ไม่พบหมู่บ้านที่ตรงกัน",
         "mapPriceNote": "ราคาที่ใช้: {discount}",
-        "mapCurrentTag": "หมู่บ้านปัจจุบัน"
+        "mapCurrentTag": "หมู่บ้านปัจจุบัน",
+        "contactDev": "ติดต่อผู้พัฒนา",
+        "contactHint": "เข้ากลุ่ม LINE แล้วแท็ก @CSL"
     },
     "id": {
         "htmlLang": "id",
@@ -669,7 +681,9 @@
         "mapClose": "Tutup",
         "mapNoMatch": "Tidak ada desa yang cocok",
         "mapPriceNote": "Harga dengan: {discount}",
-        "mapCurrentTag": "Saat ini"
+        "mapCurrentTag": "Saat ini",
+        "contactDev": "Hubungi pengembang",
+        "contactHint": "Setelah bergabung ke grup LINE, tag @CSL"
     },
     "es": {
         "htmlLang": "es",
@@ -765,7 +779,9 @@
         "mapClose": "Cerrar",
         "mapNoMatch": "No hay aldeas que coincidan",
         "mapPriceNote": "Precios con: {discount}",
-        "mapCurrentTag": "Actual"
+        "mapCurrentTag": "Actual",
+        "contactDev": "Contactar al desarrollador",
+        "contactHint": "Tras unirte al grupo de LINE, etiqueta a @CSL"
     },
     "pt": {
         "htmlLang": "pt",
@@ -861,6 +877,8 @@
         "mapClose": "Fechar",
         "mapNoMatch": "Nenhuma vila encontrada",
         "mapPriceNote": "Preços com: {discount}",
-        "mapCurrentTag": "Atual"
+        "mapCurrentTag": "Atual",
+        "contactDev": "Falar com o desenvolvedor",
+        "contactHint": "Depois de entrar no grupo do LINE, marque @CSL"
     }
 }
