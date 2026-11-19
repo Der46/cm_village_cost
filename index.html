@@ -1621,7 +1621,11 @@
                 detail = `<div class="vault-line">${escapeHtml(t("buildCountFromCurrent", { start, count: done }))}</div>`;
             }
 
-            const shortage = next ? costOf(next, d) - remaining : 0n;
+            // `next` is the village still being built (null when everything is built).
+            // Finishing it reveals the village after it, which is what "下一村" shows.
+            const building = next;
+            next = building ? byNumber.get(building.no + 1) || null : null;
+            const shortage = building ? costOf(building, d) - remaining : 0n;
 
             vault.innerHTML = `
                 <div class="vault-label">${escapeHtml(label)}</div>
@@ -1631,7 +1635,7 @@
                     <div class="stat"><div class="stat-label">${escapeHtml(t("usedCoinsLabel"))}</div><div class="stat-value">${escapeHtml(formatCoins(spent))}</div></div>
                     <div class="stat"><div class="stat-label">${escapeHtml(t("remainingCoinsLabel"))}</div><div class="stat-value">${escapeHtml(formatCoins(remaining))}</div></div>
                     <div class="stat"><div class="stat-label">${escapeHtml(t("nextVillageLabel"))}</div><div class="stat-value">${escapeHtml(next ? villageLabel(next) : t("noNextVillage"))}</div></div>
-                    <div class="stat"><div class="stat-label">${escapeHtml(t("shortCoinsLabel"))}</div><div class="stat-value short">${escapeHtml(next ? formatCoins(shortage > 0n ? shortage : 0n) : t("noShortage"))}</div></div>
+                    <div class="stat"><div class="stat-label">${escapeHtml(t("shortCoinsLabel"))}</div><div class="stat-value short">${escapeHtml(building ? formatCoins(shortage > 0n ? shortage : 0n) : t("noShortage"))}</div></div>
                 </div>`;
         }
 
