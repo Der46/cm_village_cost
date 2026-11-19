@@ -65,7 +65,7 @@
             font-family: var(--text);
             font-size: 16px;
             line-height: 1.55;
-            padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+            padding: 0 16px max(24px, env(safe-area-inset-bottom));
         }
 
         button,
@@ -86,11 +86,25 @@
         }
 
         /* ---------- Top bar ---------- */
+        /* Title bar stays visible while scrolling */
         .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 30;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
+            padding: max(14px, env(safe-area-inset-top)) 0 10px;
+            background: var(--page);
+            /* paint the page colour edge to edge without causing horizontal scroll */
+            box-shadow: 0 0 0 100vmax var(--page);
+            clip-path: inset(0 -100vmax);
+        }
+
+        .topbar.is-stuck {
+            box-shadow: 0 8px 10px -10px rgba(58, 42, 28, 0.45), 0 0 0 100vmax var(--page);
+            clip-path: inset(0 -100vmax -14px);
         }
 
         .brand {
@@ -1105,7 +1119,8 @@
 
 <body>
     <main class="app">
-        <header class="topbar">
+        <div id="topSentinel" aria-hidden="true"></div>
+        <header class="topbar" id="topbar">
             <div class="brand">
                 <img src="icon.svg" alt="" />
                 <div class="brand-text">
@@ -1771,6 +1786,13 @@
             document.querySelectorAll(".panel input, .panel button, input[name='discount'], #mapOpen").forEach(el => {
                 el.disabled = !on;
             });
+        }
+
+        /* ---------- Sticky title bar shadow ---------- */
+        if ("IntersectionObserver" in window) {
+            new IntersectionObserver(([entry]) => {
+                $("topbar").classList.toggle("is-stuck", !entry.isIntersecting);
+            }).observe($("topSentinel"));
         }
 
         /* ---------- Village map ---------- */
