@@ -13,8 +13,10 @@
 ## 功能
 
 - **可蓋到哪一村**：輸入目前所在村落與身上金幣，計算從現在開始最多能蓋到第幾村，以及距離下一村還差多少。
-- **折扣試算**：可選擇 10%～40% off 等建造折扣，即時重新計算。
+- **區間費用**：輸入從第幾村開始、想看見第幾村，計算中間所有村落的建造總金額（例：第 10 村 → 看見第 15 村 = 蓋完第 10～14 村）。
+- **折扣試算**：可選擇 10%～40% off 等建造折扣，三種模式共用，即時重新計算，並列出各折扣比較。
 - **單一村落查詢**：查詢任一村落的建造總金額，並列出各折扣下的金額。
+- **記住輸入**：分頁、折扣與輸入值會保存在瀏覽器，下次開啟直接接續。
 - **多語系**：繁體中文、English、Tiếng Việt、日本語、한국어、ไทย、Bahasa Indonesia、Español、Português。
 - **可加入主畫面**：附 SVG / PNG App icon 與 Web App Manifest，可在手機上「加入主畫面」當成 App 使用。
 
@@ -25,6 +27,7 @@
 | `index.html` | 主頁面（HTML / CSS / JS 皆在同一檔） |
 | `villages_cost.json` | 各村落等級、名稱與建造金額資料 |
 | `i18n.json` | 多語系翻譯字串 |
+| `village_names.json` | 各語言的村落名稱（依編號；英文沿用 `villages_cost.json`，缺少時顯示英文） |
 | `scrape_coin_master.py` | 從公開網頁抓取村落金額資料的爬蟲 |
 | `icon.svg` / `icon-180.png` / `icon-512.png` | App icon |
 | `manifest.webmanifest` | PWA manifest |
