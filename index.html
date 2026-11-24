@@ -1394,7 +1394,28 @@
 
         /* ---------- Numbers ---------- */
         function digits(v) {
-            return String(v || "").replace(/\D/g, "");
+            // full-width digits (０-９) from Chinese/Japanese keyboards count as digits too
+            return String(v || "")
+                .replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFF10 + 48))
+                .replace(/\D/g, "");
+        }
+
+        // Run `handler` on input, but never while an IME (注音, phone keyboards) is still
+        // composing: rewriting the field mid-composition makes the keyboard commit the digit
+        // twice ("3" -> "33"). The handler runs once composition ends instead.
+        function onNumberInput(el, handler) {
+            let composing = false;
+            el.addEventListener("compositionstart", () => {
+                composing = true;
+            });
+            el.addEventListener("compositionend", () => {
+                composing = false;
+                handler();
+            });
+            el.addEventListener("input", e => {
+                if (composing || e.isComposing) return;
+                handler();
+            });
         }
 
         function toBig(v) {
@@ -1470,10 +1491,10 @@
                 btn.addEventListener("click", () => stepVillage(id, Number(btn.dataset.step)));
             });
 
-            input.addEventListener("input", () => {
+            onNumberInput(input, () => {
                 const clean = digits(input.value).replace(/^0+/, "").slice(0, 4);
                 if (input.value !== clean) input.value = clean;
-                setVillageValue(id, clean);
+                if (clean !== state[stepperFields[id].stateKey]) setVillageValue(id, clean);
             });
 
             input.addEventListener("keydown", e => {
@@ -1535,23 +1556,28 @@
         }
 
         /* ---------- Coin input with digit grouping ---------- */
-        coinInput.addEventListener("input", () => {
+        onNumberInput(coinInput, () => {
             const caret = coinInput.selectionStart ?? coinInput.value.length;
             const digitsBeforeCaret = digits(coinInput.value.slice(0, caret)).length;
             const clean = digits(coinInput.value).replace(/^0+(?=\d)/, "").slice(0, 20);
+            const formatted = clean ? formatNumber(BigInt(clean)) : "";
 
-            state.coins = clean;
-            coinInput.value = clean ? formatNumber(BigInt(clean)) : "";
+            // only rewrite the field when the text really changes, so the keyboard isn't disturbed
+            if (coinInput.value !== formatted) {
+                coinInput.value = formatted;
 
-            // put the caret back after the same number of digits
-            let pos = 0;
-            let seen = 0;
-            while (pos < coinInput.value.length && seen < digitsBeforeCaret) {
-                if (/\d/.test(coinInput.value[pos])) seen++;
-                pos++;
+                // put the caret back after the same number of digits
+                let pos = 0;
+                let seen = 0;
+                while (pos < formatted.length && seen < digitsBeforeCaret) {
+                    if (/\d/.test(formatted[pos])) seen++;
+                    pos++;
+                }
+                coinInput.setSelectionRange(pos, pos);
             }
-            coinInput.setSelectionRange(pos, pos);
 
+            if (clean === state.coins) return;
+            state.coins = clean;
             saveState();
             renderAll();
         });
